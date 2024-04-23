@@ -42,7 +42,6 @@ int main(int argc, char *argv[])
 	execAutoindex();
 
 	std::vector<Server *> servers = initServers(cf.GetMapConfig());
-
 	Clients clients;
 
 	// struct kevent evList[MAX_EVENTS];
@@ -65,9 +64,9 @@ int main(int argc, char *argv[])
 		{
 			if (FD_ISSET(servers[i]->GetSocketfd(), &readfd))
 			{
-				std::cout << "first FD_ISSET: "<< FD_ISSET(servers[i]->GetSocketfd(), &readfd)<<std::endl;
-				ssize_t addrlen = sizeof(sockaddr);
-				int connection = accept(servers[i]->GetSocketfd(), (struct sockaddr *)(*servers[i]).GetSockAddr(), (socklen_t *)&addrlen);
+				// std::cout << "first FD_ISSET: "<< FD_ISSET(servers[i]->GetSocketfd(), &readfd)<<std::endl;
+				// ssize_t addrlen = sizeof(sockaddr);
+				int connection = accept(servers[i]->GetSocketfd(),NULL ,NULL);
 				try
 				{
 					if (clients.AddConnection(connection, servers[i]->GetSocketfd()))
@@ -149,7 +148,7 @@ int main(int argc, char *argv[])
 							}
 							if (!resHeader.getError().first.empty())
 							{
-								std::cout << "error" << resHeader.getError().second << std::endl;
+								// std::cout << "error" << resHeader.getError().second << std::endl;
 								resHeader = ResponseHandler(NULL, resHeader.getError());
 								throw ServerException(resHeader.getError().first,
 													  resHeader.createResp(std::atoi(resHeader.getError().first.c_str())),
@@ -164,6 +163,7 @@ int main(int argc, char *argv[])
 				}
 				std::string respChunck;
 				int dataSent = 0;
+				// std::cout << "second: " << servers[i]->_clients[j].second << std::endl;
 				do
 				{
 					respChunck = resp.substr(0, 35000);
@@ -171,14 +171,14 @@ int main(int argc, char *argv[])
 					if (dataSent < 0)
 						break;
 					resp = resp.substr(dataSent);
-					servers[i]->_clients[j].second = "";
+					// servers[i]->_clients[j].second = "";
 				} while (resp.size());
-				bufferStr.clear();
+				// bufferStr.clear();
 				// if(servers[i]->_clients[j].second == "")
 				// {
-				// 	FD_CLR(servers[i]->_clients[j].first, &active);
-				// 	close(servers[i]->_clients[j].first);
-				// 	servers[i]->_clients.erase(servers[i]->_clients.begin() + j);
+					// FD_CLR(servers[i]->_clients[j].first, &active);
+					// close(servers[i]->_clients[j].first);
+					// servers[i]->_clients.erase(servers[i]->_clients.begin() + j);
 				// }
 				// index = findServerByFD(servers, clients.GetConnection(evList[i].ident)->evIdent);
 				// EV_SET((*servers[index]).GetEvSet(), evList[i].ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
