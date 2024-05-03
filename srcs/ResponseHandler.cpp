@@ -372,7 +372,6 @@ std::string ResponseHandler::executeCgi(const std::vector<std::string>& cgiPar) 
 	for (size_t i = 0; env[i]; i++)
 		delete[] env[i];
 	delete[] env;
-
 	if (!pid)
 		exit(0);
 

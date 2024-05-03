@@ -89,6 +89,7 @@ int main(int argc, char *argv[])
 				bzero(buffer, 8192);
 				size_t totalBytesRead = 0;
 				int bytesRead = 0;
+				int errSend = 0;
 				if (FD_ISSET(servers[i]->_clients[j].first, &readfd))
 				{
 					do
@@ -117,6 +118,7 @@ int main(int argc, char *argv[])
 						continue;
 					}
 					ResponseHandler resHeader = ResponseHandler(servers[i], &reqHeader, &config);
+					std::cout << "lama\n";
 					try
 					{
 						if (reqHeader.GetMethod() == "POST" && reqHeader.GetBody().length() > config.GetLimitSizeBody())
@@ -157,25 +159,39 @@ int main(int argc, char *argv[])
 					{
 						std::string errorResponse = e.what();
     					send(servers[i]->_clients[j].first, errorResponse.c_str(), errorResponse.size(), 0);
+						errSend = 1;
 					}
-					std::cout<<"resp: "<<resp<<std::endl;
+					// std::cout<<"resp: "<<resp<<std::endl;
 				}
 				std::string respChunck;
 				int dataSent = 0;
-				do
+				if(errSend == 0)
 				{
-					respChunck = resp.substr(0, 35000);
-					dataSent = send(servers[i]->_clients[j].first, servers[i]->_clients[j].second.c_str(), respChunck.size(), 0);
-					if (dataSent < 0)
-						break;
-					resp = resp.substr(dataSent);
-				} while (resp.size());
+					do
+					{
+						respChunck = resp.substr(0, 35000);
+						dataSent = send(servers[i]->_clients[j].first, servers[i]->_clients[j].second.c_str(), respChunck.size(), 0);
+						if (dataSent < 0)
+							break;
+						resp = resp.substr(dataSent);
+					} while (resp.size());
+				}
 	
 				usleep(100);
 			}
 		}
+
 	}
 	
+	for(size_t i = 0; i < servers.size(); i++)
+	{
+		FD_CLR(servers[i]->GetSocketfd(), &active);
+		for(size_t j = 0 ; j < servers[i]->_clients.size(); j++)
+		{
+			close(servers[i]->_clients[j].first);
+			FD_CLR(servers[i]->_clients[j].first, &active);
+		}
+	}
 	std::cout << RED << "EXIT" << RESET << std::endl;
 	std::vector<Server *>::iterator i = servers.begin();
 	for (; i != servers.end(); i++)
