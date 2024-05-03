@@ -44,7 +44,6 @@ int main(int argc, char *argv[])
 	std::vector<Server *> servers = initServers(cf.GetMapConfig());
 	Clients clients;
 
-	// struct kevent evList[MAX_EVENTS];
 	fd_set readfd, write, active;
 	FD_ZERO(&active);
 	for (size_t i = 0; i < servers.size(); i++)
@@ -64,8 +63,6 @@ int main(int argc, char *argv[])
 		{
 			if (FD_ISSET(servers[i]->GetSocketfd(), &readfd))
 			{
-				// std::cout << "first FD_ISSET: "<< FD_ISSET(servers[i]->GetSocketfd(), &readfd)<<std::endl;
-				// ssize_t addrlen = sizeof(sockaddr);
 				int connection = accept(servers[i]->GetSocketfd(),NULL ,NULL);
 				try
 				{
@@ -92,14 +89,13 @@ int main(int argc, char *argv[])
 				bzero(buffer, 8192);
 				size_t totalBytesRead = 0;
 				int bytesRead = 0;
-				//std::cout<< FD_ISSET(servers[i]->_clients[j].first, &readfd) << std::endl;
 				if (FD_ISSET(servers[i]->_clients[j].first, &readfd))
 				{
 					do
 					{
 						bytesRead = recv(servers[i]->_clients[j].first, buffer, 8192, 0);
 						totalBytesRead += bytesRead;
-						std::cout << "totalBytesRead: "<<totalBytesRead<<std::endl;
+						//std::cout << "totalBytesRead: "<<totalBytesRead<<std::endl;
 						if (bytesRead >= 0)
 							bufferStr.append(buffer, bytesRead);
 						usleep(100000);
@@ -148,7 +144,8 @@ int main(int argc, char *argv[])
 							}
 							if (!resHeader.getError().first.empty())
 							{
-								// std::cout << "error" << resHeader.getError().second << std::endl;
+								std::cout << "error: " << resHeader.getError().second << std::endl;
+								std::cout << "servers[i]->_clients[j].first: "<< servers[i]->_clients[j].first<<std::endl;
 								resHeader = ResponseHandler(NULL, resHeader.getError());
 								throw ServerException(resHeader.getError().first,
 													  resHeader.createResp(std::atoi(resHeader.getError().first.c_str())),
@@ -158,12 +155,13 @@ int main(int argc, char *argv[])
 					}
 					catch (const ServerException &e)
 					{
-						resp = e.what();
+						std::string errorResponse = e.what();
+    					send(servers[i]->_clients[j].first, errorResponse.c_str(), errorResponse.size(), 0);
 					}
+					std::cout<<"resp: "<<resp<<std::endl;
 				}
 				std::string respChunck;
 				int dataSent = 0;
-				// std::cout << "second: " << servers[i]->_clients[j].second << std::endl;
 				do
 				{
 					respChunck = resp.substr(0, 35000);
@@ -171,26 +169,14 @@ int main(int argc, char *argv[])
 					if (dataSent < 0)
 						break;
 					resp = resp.substr(dataSent);
-					// servers[i]->_clients[j].second = "";
 				} while (resp.size());
-				// bufferStr.clear();
-				// if(servers[i]->_clients[j].second == "")
-				// {
-					// FD_CLR(servers[i]->_clients[j].first, &active);
-					// close(servers[i]->_clients[j].first);
-					// servers[i]->_clients.erase(servers[i]->_clients.begin() + j);
-				// }
-				// index = findServerByFD(servers, clients.GetConnection(evList[i].ident)->evIdent);
-				// EV_SET((*servers[index]).GetEvSet(), evList[i].ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-				// kevent(kQueue, (*servers[index]).GetEvSet(), 1, NULL, 0, NULL);
-				//clients.DelConnection(evList[i].ident);
+	
 				usleep(100);
 			}
 		}
 	}
-
+	
 	std::cout << RED << "EXIT" << RESET << std::endl;
-	//close(kQueue);
 	std::vector<Server *>::iterator i = servers.begin();
 	for (; i != servers.end(); i++)
 	{
