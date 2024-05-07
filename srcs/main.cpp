@@ -165,22 +165,21 @@ int main(int argc, char *argv[])
 				}
 				std::string respChunck;
 				int dataSent = 0;
-				if(errSend == 0)
+				if(errSend == 0 && !resp.empty())
 				{
-					do
+					for(size_t k = 0; k <= resp.size(); k++)
 					{
 						respChunck = resp.substr(0, 35000);
 						dataSent = send(servers[i]->_clients[j].first, servers[i]->_clients[j].second.c_str(), respChunck.size(), 0);
-						if (dataSent < 0)
+						if (dataSent <= 0)
 							break;
+						std::cout << "dataSent: " << dataSent << std::endl;
 						resp = resp.substr(dataSent);
-					} while (resp.size());
+					}
 				}
-	
 				usleep(100);
 			}
 		}
-
 	}
 	
 	for(size_t i = 0; i < servers.size(); i++)
