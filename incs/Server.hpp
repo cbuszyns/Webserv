@@ -25,6 +25,7 @@ class Server {
 		std::vector<std::pair<int, std::string> > _clients;
 		void connect();
 		void disconnect();
+		int AddConnection(int fd);
 		int GetSocketfd() { return _sockfd; }
 		int GetPort() { return _port; }
 		std::string GetHost() { return _host; }

@@ -42,7 +42,6 @@ int main(int argc, char *argv[])
 	execAutoindex();
 
 	std::vector<Server *> servers = initServers(cf.GetMapConfig());
-	Clients clients;
 
 	fd_set readfd, write, active;
 	FD_ZERO(&active);
@@ -66,7 +65,7 @@ int main(int argc, char *argv[])
 				int connection = accept(servers[i]->GetSocketfd(),NULL ,NULL);
 				try
 				{
-					if (clients.AddConnection(connection, servers[i]->GetSocketfd()))
+					if (servers[i]->AddConnection(connection))
 					{
 						ResponseHandler resHeader(NULL, std::make_pair("500", DEFAULT_ERROR_PATH));
 						throw ServerException("500", resHeader.createResp(500), connection);
@@ -171,7 +170,6 @@ int main(int argc, char *argv[])
 				{
 					for(size_t k = 0; resp.size() != 0; k++)
 					{
-						std::cout<< "servers[i]->_clients[j].second.c_str() VALUE "<< servers[i]->_clients[j].second.c_str()<<std::endl; 
 						respChunck = resp.substr(0, 35000);
 						std::cout << servers[i]->_clients[j].first<< " Connection for send"<<std::endl;
 						dataSent = send(servers[i]->_clients[j].first, servers[i]->_clients[j].second.c_str(), respChunck.size(), 0);
@@ -184,9 +182,11 @@ int main(int argc, char *argv[])
 						resp = resp.substr(dataSent);
 					}
 						std::cout<< "BREAK"<<std::endl;
+						bufferStr.clear();
 						FD_CLR(servers[i]->_clients[j].first, &active);
 						close(servers[i]->_clients[j].first);
-				}
+						//servers[i]->_clients[j].second = "";
+					}
 				usleep(100);
 			}
 		}

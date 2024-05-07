@@ -4,6 +4,17 @@ Server::Server(unsigned int port, std::string host, Configs *config) : _port(por
 
 Server::~Server() {}
 
+int Server::AddConnection(int fd){
+	if (fd < 1)
+		return (-1);
+	int flags = fcntl(fd, F_GETFL, 0);
+
+	assert(flags >= 0);
+	fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+	this->_clients.push_back(std::make_pair(fd, ""));
+	return 0;
+}
+
 void Server::connect() {
 	_sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (_sockfd == -1) {

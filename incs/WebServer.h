@@ -44,7 +44,6 @@
 # include <map>
 # include <algorithm>
 # include "Server.hpp"
-# include "Client.hpp"
 # include "Config.hpp"
 # include "ConfigFile.hpp"
 # include "Routes.hpp"

@@ -4,8 +4,7 @@ S		= srcs/
 O		= objs/
 I		= incs/
 
-SRCS =  Client.cpp \
-		Config.cpp \
+SRCS =	Config.cpp \
 		ConfigFile.cpp \
 		Routes.cpp \
 		RequestHandler.cpp \
