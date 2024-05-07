@@ -133,11 +133,13 @@ int main(int argc, char *argv[])
 							if (!config.GetRedirectionCode())
 							{
 								resp.append(resHeader.createResp(200));
+								//std::cout<< "Printing resp without redcode: "<< resp<<std::endl;
 								servers[i]->_clients[j].second = resp;
 							}
 							else
 							{
 								resp.append(resHeader.createResp(config.GetRedirectionCode()));
+								//std::cout<< "Printing resp: "<< resp<<std::endl;
 								std::string redir("Location: ");
 								redir.append(config.GetRedirectionUrl());
 								redir.append("\r\n");
@@ -167,15 +169,23 @@ int main(int argc, char *argv[])
 				int dataSent = 0;
 				if(errSend == 0 && !resp.empty())
 				{
-					for(size_t k = 0; k <= resp.size(); k++)
+					for(size_t k = 0; resp.size() != 0; k++)
 					{
+						std::cout<< "servers[i]->_clients[j].second.c_str() VALUE "<< servers[i]->_clients[j].second.c_str()<<std::endl; 
 						respChunck = resp.substr(0, 35000);
+						std::cout << servers[i]->_clients[j].first<< " Connection for send"<<std::endl;
 						dataSent = send(servers[i]->_clients[j].first, servers[i]->_clients[j].second.c_str(), respChunck.size(), 0);
 						if (dataSent <= 0)
+						{
+							
 							break;
+						}
 						std::cout << "dataSent: " << dataSent << std::endl;
 						resp = resp.substr(dataSent);
 					}
+						std::cout<< "BREAK"<<std::endl;
+						FD_CLR(servers[i]->_clients[j].first, &active);
+						close(servers[i]->_clients[j].first);
 				}
 				usleep(100);
 			}

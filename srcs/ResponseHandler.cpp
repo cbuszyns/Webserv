@@ -58,10 +58,13 @@ std::string ResponseHandler::createResp(int code) const
 	resp.append("\r\n");
 	resp.append("content-length: ");
 	resp.append(to_string(_contentLenght));
+	std::cout<< _contentLenght<< "CRIBBIO\n";
 	resp.append("\r\n");
 	resp.append(getDate());
 	resp.append("\r\n");
 	resp.append(_content);
+	std::cout<<_content.size()<<std::endl;
+	resp.append("\r\n");
 	return resp;
 }
 
