@@ -26,7 +26,6 @@ void Server::connect() {
 	}
 	bool b = 1;
 	setsockopt(_sockfd, SOL_SOCKET, SO_REUSEADDR, &b, sizeof(int));
-	//setsockopt(_sockfd, SOL_SOCKET, SO_NOSIGPIPE, &b, sizeof(int));
 	_sockAddr.sin_port = htons(_port);
 	if (bind(_sockfd, (struct sockaddr*)&_sockAddr, sizeof(_sockAddr)) < 0) {
 		throw SocketExcept(std::string("Failed to bind port ").append(std::to_string(_port)).append(". errno: ").append(std::to_string(errno)));
@@ -34,8 +33,6 @@ void Server::connect() {
 	if (listen(_sockfd, 10) < 0) {
 		throw SocketExcept(std::string("Failed to listen on socket. errno: ").append(std::to_string(errno)));
 	}
-	// EV_SET(&_evSet, _sockfd, EVFILT_READ, EV_ADD, 0, 0, NULL);
-	// kevent(kQueue, &_evSet, 1, NULL, 0, NULL);
 	std::cout << GREEN << "Connected to host: " << BLUE << _host << GREEN << " and port: " << BLUE << _port << RESET <<std::endl;
 }
 

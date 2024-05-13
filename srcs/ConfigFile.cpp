@@ -52,21 +52,6 @@ std::vector<std::string> ConfigFile::splitString(std::string content)
 			result.push_back(content.substr(beginning + 2, ending - 2));
 		content = content.substr(ending + 2);
 	}
-    // for (const auto& str : result) {
-    //     std::stringstream ss(str);
-    //     char delimiter = '{';
-
-    //     std::string component;
-    //     while (std::Getline(ss, component, delimiter)) {
-    //         if (!component.empty()) {
-    //             dividedComponents.push_back(component);
-    //         }
-    //         delimiter = (delimiter == '{') ? '}' : '{';
-    //     }
-    // }
-
-    // // Update the original vector with divided components
-    // result = dividedComponents;
     return (result);
 }
 

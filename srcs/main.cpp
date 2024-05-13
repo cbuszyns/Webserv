@@ -181,17 +181,14 @@ int main(int argc, char *argv[])
 						std::cout << "dataSent: " << dataSent << std::endl;
 						resp = resp.substr(dataSent);
 					}
-						std::cout<< "BREAK"<<std::endl;
-						bufferStr.clear();
-						FD_CLR(servers[i]->_clients[j].first, &active);
-						close(servers[i]->_clients[j].first);
-						//servers[i]->_clients[j].second = "";
-					}
+					bufferStr.clear();
+					FD_CLR(servers[i]->_clients[j].first, &active);
+					close(servers[i]->_clients[j].first);
+				}
 				usleep(100);
 			}
 		}
-	}
-	
+	}	
 	for(size_t i = 0; i < servers.size(); i++)
 	{
 		FD_CLR(servers[i]->GetSocketfd(), &active);
@@ -210,25 +207,3 @@ int main(int argc, char *argv[])
 	}
 	return 0;
 }
-
-// The line if (evList[i].filter == EVFILT_READ) is a condition used in code that utilizes the kqueue system call for event notification in Unix-like operating systems (such as BSD systems like macOS).
-
-// kqueue is an advanced event notification mechanism that allows monitoring various types of events on file descriptors (sockets, pipes, files, etc.). It allows efficient monitoring of multiple file descriptors for various events, including reading, writing, and errors.
-
-// In this specific condition, evList is an array of kevent structures, and EVFILT_READ is a constant indicating that the event filter is for read events. This condition checks if the event corresponds to a read event.
-
-// To replicate a similar condition using select() instead of kqueue, you would typically use the FD_ISSET macro to check if a file descriptor is ready for reading. Here's how you can do it:
-
-// c
-// Copy code
-// // Assume fd_set readfds is initialized and populated
-// int max_fd = 0; // Maximum file descriptor
-// // Populate readfds and set max_fd properly
-
-// // Assume sockfd is the socket descriptor being checked
-// if (FD_ISSET(sockfd, &readfds)) {
-//     // sockfd is ready for reading
-// }
-// In this case, FD_ISSET(sockfd, &readfds) checks if the file descriptor sockfd is set in the readfds set, indicating that it is ready for reading.
-
-// So, to replicate the condition if (evList[i].filter == EVFILT_READ) using select(), you would first set up the fd_set to monitor read events on specific file descriptors, and then use FD_ISSET to check if a particular file descriptor is ready for reading.
