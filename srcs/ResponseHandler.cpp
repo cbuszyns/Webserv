@@ -126,7 +126,7 @@ void ResponseHandler::setPath()
 void ResponseHandler::setContent()
 {
 	std::ifstream file;
-	std::cout << "Path: " << _path << std::endl;
+
 	file.open(_path.c_str(), std::ios::in | std::ios::binary);
 	struct stat s;
 	stat(_path.c_str(), &s);

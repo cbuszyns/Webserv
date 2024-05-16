@@ -8,9 +8,9 @@ static void signal_handler(int i)
 		run = 0;
 }
 
-std::vector<Server *> initServers(std::map<std::string, std::vector<Configs>> portConfigs)
+std::vector<Server *> initServers(std::map<std::string, std::vector<Configs> > portConfigs)
 {
-	std::map<std::string, std::vector<Configs>>::iterator it = portConfigs.begin();
+	std::map<std::string, std::vector<Configs> >::iterator it = portConfigs.begin();
 	std::vector<Server *> servers;
 
 	for (; it != portConfigs.end(); it++)
@@ -95,7 +95,6 @@ int main(int argc, char *argv[])
 					{
 						bytesRead = recv(servers[i]->_clients[j].first, buffer, 8192, 0);
 						totalBytesRead += bytesRead;
-						//std::cout << "totalBytesRead: "<<totalBytesRead<<std::endl;
 						if (bytesRead >= 0)
 							bufferStr.append(buffer, bytesRead);
 						usleep(100000);
@@ -117,7 +116,6 @@ int main(int argc, char *argv[])
 						continue;
 					}
 					ResponseHandler resHeader = ResponseHandler(servers[i], &reqHeader, &config);
-					std::cout << "lama\n";
 					try
 					{
 						if (reqHeader.GetMethod() == "POST" && reqHeader.GetBody().length() > config.GetLimitSizeBody())
@@ -132,13 +130,11 @@ int main(int argc, char *argv[])
 							if (!config.GetRedirectionCode())
 							{
 								resp.append(resHeader.createResp(200));
-								//std::cout<< "Printing resp without redcode: "<< resp<<std::endl;
 								servers[i]->_clients[j].second = resp;
 							}
 							else
 							{
 								resp.append(resHeader.createResp(config.GetRedirectionCode()));
-								//std::cout<< "Printing resp: "<< resp<<std::endl;
 								std::string redir("Location: ");
 								redir.append(config.GetRedirectionUrl());
 								redir.append("\r\n");
@@ -147,8 +143,6 @@ int main(int argc, char *argv[])
 							}
 							if (!resHeader.getError().first.empty())
 							{
-								std::cout << "error: " << resHeader.getError().second << std::endl;
-								std::cout << "servers[i]->_clients[j].first: "<< servers[i]->_clients[j].first<<std::endl;
 								resHeader = ResponseHandler(NULL, resHeader.getError());
 								throw ServerException(resHeader.getError().first,
 													  resHeader.createResp(std::atoi(resHeader.getError().first.c_str())),
@@ -162,7 +156,6 @@ int main(int argc, char *argv[])
     					send(servers[i]->_clients[j].first, errorResponse.c_str(), errorResponse.size(), 0);
 						errSend = 1;
 					}
-					// std::cout<<"resp: "<<resp<<std::endl;
 				}
 				std::string respChunck;
 				int dataSent = 0;
@@ -171,14 +164,11 @@ int main(int argc, char *argv[])
 					for(size_t k = 0; resp.size() != 0; k++)
 					{
 						respChunck = resp.substr(0, 35000);
-						std::cout << servers[i]->_clients[j].first<< " Connection for send"<<std::endl;
 						dataSent = send(servers[i]->_clients[j].first, servers[i]->_clients[j].second.c_str(), respChunck.size(), 0);
 						if (dataSent <= 0)
 						{
-							
 							break;
 						}
-						std::cout << "dataSent: " << dataSent << std::endl;
 						resp = resp.substr(dataSent);
 					}
 					bufferStr.clear();
