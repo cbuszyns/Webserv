@@ -1,7 +1,7 @@
 # include "../incs/WebServer.h"
 
 
-ResponseHandler::ResponseHandler(Server *server, RequestHandler *request, Configs *config)
+Response::Response(Server *server, Request *request, Configs *config)
 	: _server(server), _request(request), _config(config)
 {
 	setCodeMap();
@@ -10,7 +10,7 @@ ResponseHandler::ResponseHandler(Server *server, RequestHandler *request, Config
 	setContentType(_path);
 }
 
-ResponseHandler::ResponseHandler(RequestHandler *request, std::pair<std::string, std::string> error)
+Response::Response(Request *request, std::pair<std::string, std::string> error)
 	: _request(request), _path(error.second), _error(error)
 {
 	setCodeMap();
@@ -18,16 +18,16 @@ ResponseHandler::ResponseHandler(RequestHandler *request, std::pair<std::string,
 	setContent();
 }
 
-ResponseHandler::~ResponseHandler()
+Response::~Response()
 {
 }
 
-std::string ResponseHandler::getRespCode(int code) const
+std::string Response::getRespCode(int code) const
 {
 	return _code.at(code);
 }
 
-std::string ResponseHandler::getDate() const
+std::string Response::getDate() const
 {
 	std::string date = "date: ";
 	time_t t = std::time(NULL);
@@ -38,7 +38,7 @@ std::string ResponseHandler::getDate() const
 	return date;
 }
 
-char **ResponseHandler::getEnvAsCstrArray() const {
+char **Response::getEnvAsCstrArray() const {
 	char	**env = new char*[this->_env.size() + 1];
 	int	j = 0;
 	for (std::map<std::string, std::string>::const_iterator i = this->_env.begin(); i != this->_env.end(); i++) {
@@ -52,7 +52,7 @@ char **ResponseHandler::getEnvAsCstrArray() const {
 }
 
 
-Route ResponseHandler::getSimilarRoute(std::string path) const
+Route Response::getSimilarRoute(std::string path) const
 {
 	std::map<std::string, Route> configRoute = _config->GetRoute();
 	std::map<std::string, Route>::reverse_iterator it = configRoute.rbegin();
@@ -72,12 +72,12 @@ Route ResponseHandler::getSimilarRoute(std::string path) const
 	return tmp.find(std::string("/"))->second;
 }
 
-std::pair<std::string, std::string> ResponseHandler::getError() const
+std::pair<std::string, std::string> Response::getError() const
 {
 	return _error;
 }
 
-void ResponseHandler::setEnv() {
+void Response::setEnv() {
 	std::map<std::string, std::string>	headers = _request->GetHeaders();
 	char cwd[9999];
 	getcwd(cwd, sizeof(cwd));
@@ -109,7 +109,7 @@ void ResponseHandler::setEnv() {
 	this->_env["HTTP_COOKIE"] = headers["Cookie"];
 }
 
-std::string ResponseHandler::createResp(int code) const
+std::string Response::createResp(int code) const
 {
 	std::string resp("HTTP/1.1 ");
 
@@ -139,7 +139,7 @@ std::string ResponseHandler::createResp(int code) const
 	return resp;
 }
 
-void ResponseHandler::setCodeMap()
+void Response::setCodeMap()
 {
 	_code[200] = "OK";
 	_code[204] = "No Content";
@@ -154,7 +154,7 @@ void ResponseHandler::setCodeMap()
 	_code[500] = "Internal Server Error";
 }
 
-void ResponseHandler::setPath()
+void Response::setPath()
 {
 	std::string path = _request->GetPath();
 	Route route = getSimilarRoute(path);
@@ -196,7 +196,7 @@ void ResponseHandler::setPath()
 			f.close();
 	}
 }
-void ResponseHandler::setContentType(std::string path, std::string type)
+void Response::setContentType(std::string path, std::string type)
 {
 	Route route;
 	if (_request)
@@ -225,7 +225,7 @@ void ResponseHandler::setContentType(std::string path, std::string type)
 		_contentType = "text/plain";
 }
 
-void ResponseHandler::setContent()
+void Response::setContent()
 {
 	std::ifstream file;
 
@@ -287,8 +287,7 @@ void ResponseHandler::setContent()
 	file.close();
 }
 
-
-std::string ResponseHandler::executeCgi(const std::vector<std::string>& cgiPar) {
+std::string Response::executeCgi(const std::vector<std::string>& cgiPar) {
 	pid_t		pid;
 	int			saveStdin;
 	int			saveStdout;
@@ -365,8 +364,6 @@ std::string ResponseHandler::executeCgi(const std::vector<std::string>& cgiPar) 
 
 	return (newBody);
 }
-
-
 
 int execAutoindex()
 {

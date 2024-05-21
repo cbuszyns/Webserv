@@ -1,18 +1,15 @@
-#ifndef RESPONSE_HANDLER_HPP
-# define RESPONSE_HANDLER_HPP
+#pragma once
 
 # include "WebServer.h"
 
-int execAutoindex();
-
 class Server;
-class RequestHandler;
+class Request;
 
-class ResponseHandler
+class Response
 {
 	private:
 		Server *_server;
-		RequestHandler *_request;
+		Request *_request;
 		Configs*_config;
 		std::map<int, std::string> _code;
 		std::string _path;
@@ -32,9 +29,9 @@ class ResponseHandler
 		Route getSimilarRoute(std::string path) const;
 
 	public:
-		ResponseHandler(Server *server, RequestHandler *request, Configs *config);
-		ResponseHandler(RequestHandler *request, std::pair<std::string, std::string> error = std::make_pair("500", DEFAULT_ERROR_PATH));
-		~ResponseHandler();
+		Response(Server *server, Request *request, Configs *config);
+		Response(Request *request, std::pair<std::string, std::string> error = std::make_pair("500", DEFAULT_ERROR_PATH));
+		~Response();
 		std::string createResp(int code) const;
 		std::string getRespCode(int code) const;
 		std::string getContentType() const;
@@ -46,4 +43,4 @@ class ResponseHandler
 		}
 };
 
-#endif
+int execAutoindex();

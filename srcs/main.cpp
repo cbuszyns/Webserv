@@ -32,18 +32,17 @@ std::vector<Server *> initServers(std::map<std::string, std::vector<Configs> > p
 int main(int argc, char *argv[])
 {
 	std::string resp;
+	fd_set readfd, write, active;
+	
+	signal(SIGINT, signal_handler);
 	if (argc != 2)
 	{
 		std::cerr << RED << "Error: Wrong numbers of arguments" << RESET << std::endl;
 		return 1;
 	}
 	ConfigFile cf(argv[1]);
-	signal(SIGINT, signal_handler);
 	execAutoindex();
-
 	std::vector<Server *> servers = initServers(cf.GetMapConf());
-
-	fd_set readfd, write, active;
 	FD_ZERO(&active);
 	for (size_t i = 0; i < servers.size(); i++)
 	{
@@ -67,7 +66,7 @@ int main(int argc, char *argv[])
 				{
 					if (servers[i]->AddConnection(connection))
 					{
-						ResponseHandler resHeader(NULL, std::make_pair("500", DEFAULT_ERROR_PATH));
+						Response resHeader(NULL, std::make_pair("500", DEFAULT_ERROR_PATH));
 						throw ServerException("500", resHeader.createResp(500), connection);
 					}
 					else
@@ -99,7 +98,7 @@ int main(int argc, char *argv[])
 							bufferStr.append(buffer, bytesRead);
 						usleep(100000);
 					} while (bytesRead > 0);
-					RequestHandler reqHeader = RequestHandler(bufferStr, totalBytesRead + 1);
+					Request reqHeader = Request(bufferStr, totalBytesRead + 1);
 					try
 					{
 						config = cf.GetConfig((*servers[i]).GetHostPort(), reqHeader.GetHost());
@@ -115,12 +114,12 @@ int main(int argc, char *argv[])
 						std::cout << RED << "Error: no vaiable Config" << RESET << std::endl;
 						continue;
 					}
-					ResponseHandler resHeader = ResponseHandler(servers[i], &reqHeader, &config);
+					Response resHeader = Response(servers[i], &reqHeader, &config);
 					try
 					{
 						if (reqHeader.GetMethod() == "POST" && reqHeader.GetBody().length() > config.GetMaxBodySize())
 						{
-							resHeader = ResponseHandler(NULL, std::make_pair("413", config.GetPathErr("413")));
+							resHeader = Response(NULL, std::make_pair("413", config.GetPathErr("413")));
 							throw ServerException(resHeader.getError().first,
 												  resHeader.createResp(std::atoi(resHeader.getError().first.c_str())),
 												  servers[i]->_clients[j].first);
@@ -143,7 +142,7 @@ int main(int argc, char *argv[])
 							}
 							if (!resHeader.getError().first.empty())
 							{
-								resHeader = ResponseHandler(NULL, resHeader.getError());
+								resHeader = Response(NULL, resHeader.getError());
 								throw ServerException(resHeader.getError().first,
 													  resHeader.createResp(std::atoi(resHeader.getError().first.c_str())),
 													  servers[i]->_clients[j].first);
@@ -186,8 +185,8 @@ int main(int argc, char *argv[])
 		FD_CLR(servers[i]->GetSocketfd(), &active);
 		for(size_t j = 0 ; j < servers[i]->_clients.size(); j++)
 		{
-			close(servers[i]->_clients[j].first);
 			FD_CLR(servers[i]->_clients[j].first, &active);
+			close(servers[i]->_clients[j].first);
 		}
 	}
 	std::cout << RED << "EXIT" << RESET << std::endl;

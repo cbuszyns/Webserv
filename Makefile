@@ -7,8 +7,8 @@ I		= incs/
 SRCS =	Config.cpp \
 		ConfigFile.cpp \
 		Routes.cpp \
-		RequestHandler.cpp \
-		ResponseHandler.cpp \
+		Request.cpp \
+		Response.cpp \
 		Server.cpp \
 		main.cpp
 

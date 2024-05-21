@@ -2,16 +2,16 @@
 
 #include "WebServer.h"
 
-class RequestHandler
+class Request
 {
 	private:
 		std::map<std::string, std::string> _requestsMap;
 		void parser(const std::string string, size_t n);
 
 	public:
-		RequestHandler();
-		RequestHandler(const std::string string, size_t n);
-		~RequestHandler();
+		Request();
+		Request(const std::string string, size_t n);
+		~Request();
 
 		std::map<std::string, std::string> GetHeaders() const;
 		std::string GetHost() const;

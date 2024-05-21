@@ -40,6 +40,5 @@ class Server {
 			return hostPort.append(pog2);
 		}
 		sockaddr_in* GetSockAddr() { return &_sockAddr; };
-		// struct kevent* GetEvSet() { return &_evSet; };
 		Configs GetConfig();
 };

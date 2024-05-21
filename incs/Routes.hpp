@@ -15,7 +15,7 @@ class Route{
 		std::string GetRoot();
 		std::vector<std::string> GetCGIPath();
 		std::string GetUploadPath();
-		bool GetAutoIndex();
 		std::string GetMethods();
 		std::string GetIndex();
+		bool GetAutoIndex();
 };

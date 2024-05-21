@@ -1,17 +1,17 @@
 #include "../incs/WebServer.h"
 
-RequestHandler::RequestHandler(std::string string, size_t n)
+Request::Request(std::string string, size_t n)
 {
     parser(string, n);
 }
 
-RequestHandler::RequestHandler()
+Request::Request()
 {}
 
-RequestHandler::~RequestHandler()
+Request::~Request()
 {}
 
-void RequestHandler::parser(const std::string string, size_t n) {
+void Request::parser(const std::string string, size_t n) {
 	std::istringstream resp(string);
 	std::string header;
 	std::string::size_type index;
@@ -38,13 +38,13 @@ void RequestHandler::parser(const std::string string, size_t n) {
 		_requestsMap.insert(std::make_pair("Body", string.substr(j, n - j)));
 }
 
-std::map<std::string, std::string> RequestHandler::GetHeaders() const
+std::map<std::string, std::string> Request::GetHeaders() const
 {
     return _requestsMap;
 }
 
 
-std::string RequestHandler::GetMethod() const
+std::string Request::GetMethod() const
 {
     try{
 		return _requestsMap.at("Method").substr(0, _requestsMap.at("Method").find(' ', 0));
@@ -54,17 +54,17 @@ std::string RequestHandler::GetMethod() const
 	}
 }
 
-std::string RequestHandler::GetAccept() const
+std::string Request::GetAccept() const
 {
     return _requestsMap.at("Accept");
 }
 
-std::string RequestHandler::GetHost() const
+std::string Request::GetHost() const
 {
     return _requestsMap.at("Host").substr(0, _requestsMap.at("Host").find(':', 0));
 }
 
-std::string RequestHandler::GetPath() const {
+std::string Request::GetPath() const {
 	size_t temp = _requestsMap.at("Method").find(' ', 0) + 1;
 	std::string path = _requestsMap.at("Method").substr(temp, _requestsMap.at("Method").find(' ', temp + 1) - temp);
 	temp = path.find('?', 0);
@@ -76,7 +76,7 @@ std::string RequestHandler::GetPath() const {
 }
 
 
-std::string RequestHandler::GetBody() const
+std::string Request::GetBody() const
 {
     try
     {
@@ -88,7 +88,7 @@ std::string RequestHandler::GetBody() const
     }
 }
 
-std::string RequestHandler::GetQueryString() const
+std::string Request::GetQueryString() const
 {
     std::string path = _requestsMap.at("Method").substr(_requestsMap.at("Method").find(' ', 0) + 1);
     path = path.substr(0, path.find(' ', 0));

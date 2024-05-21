@@ -12,7 +12,6 @@
 
 
 #define MAX_EVENTS 1024
-#define DEFAUL_PATH "/Users/cbuszyns/Desktop/42/Webserv/default_config_file.conf"
 #define DEFAULT_ERROR_PATH "errors/error_500.html"
 #define PYTHON3PATH "/bin/python3"
 #define AUTOINDEXPATH "./utils/generate_directory_index.py"
@@ -47,11 +46,9 @@
 # include "Config.hpp"
 # include "ConfigFile.hpp"
 # include "Routes.hpp"
-# include "RequestHandler.hpp"
-# include "ResponseHandler.hpp"
+# include "Request.hpp"
+# include "Response.hpp"
 # include "SocketExcept.hpp"
 # include "ServerException.hpp"
-
-
 
 #endif

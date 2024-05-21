@@ -54,14 +54,14 @@ std::string Route::GetUploadPath(){
 	return uploadPath;
 }
 
-bool Route::GetAutoIndex(){
-	return _map["autoindex"] == "on";
-}
-
 std::string Route::GetMethods(){
 	return _map["methods"];
 }
 
 std::string Route::GetIndex(){
 	return _map["index"];
+}
+
+bool Route::GetAutoIndex(){
+	return _map["autoindex"] == "on";
 }
