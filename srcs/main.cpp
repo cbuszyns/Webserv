@@ -32,16 +32,16 @@ std::vector<Server *> initServers(std::map<std::string, std::vector<Configs> > p
 int main(int argc, char *argv[])
 {
 	std::string resp;
-	if (argc > 2)
+	if (argc != 2)
 	{
 		std::cerr << RED << "Error: Wrong numbers of arguments" << RESET << std::endl;
 		return 1;
 	}
-	ConfigFile cf(argc == 1 ? "default_config_file.conf" : argv[1]);
+	ConfigFile cf(argv[1]);
 	signal(SIGINT, signal_handler);
 	execAutoindex();
 
-	std::vector<Server *> servers = initServers(cf.GetMapConfig());
+	std::vector<Server *> servers = initServers(cf.GetMapConf());
 
 	fd_set readfd, write, active;
 	FD_ZERO(&active);
@@ -118,25 +118,25 @@ int main(int argc, char *argv[])
 					ResponseHandler resHeader = ResponseHandler(servers[i], &reqHeader, &config);
 					try
 					{
-						if (reqHeader.GetMethod() == "POST" && reqHeader.GetBody().length() > config.GetLimitSizeBody())
+						if (reqHeader.GetMethod() == "POST" && reqHeader.GetBody().length() > config.GetMaxBodySize())
 						{
-							resHeader = ResponseHandler(NULL, std::make_pair("413", config.GetErrorPath("413")));
+							resHeader = ResponseHandler(NULL, std::make_pair("413", config.GetPathErr("413")));
 							throw ServerException(resHeader.getError().first,
 												  resHeader.createResp(std::atoi(resHeader.getError().first.c_str())),
 												  servers[i]->_clients[j].first);
 						}
 						else
 						{
-							if (!config.GetRedirectionCode())
+							if (!config.GetRedir())
 							{
 								resp.append(resHeader.createResp(200));
 								servers[i]->_clients[j].second = resp;
 							}
 							else
 							{
-								resp.append(resHeader.createResp(config.GetRedirectionCode()));
+								resp.append(resHeader.createResp(config.GetRedir()));
 								std::string redir("Location: ");
-								redir.append(config.GetRedirectionUrl());
+								redir.append(config.GetUrl());
 								redir.append("\r\n");
 								resp.insert(resp.find('\n') + 1, redir);
 								servers[i]->_clients[j].second = resp;

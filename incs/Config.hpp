@@ -3,31 +3,31 @@
 # include "WebServer.h"
 # include "Routes.hpp"
 
-class ConfigsRoute;
+class Route;
 
 class Configs
 {
     private:
     std::map<std::string, std::string> _map;
     std::vector<std::string> _methods;
-    std::map<std::string, ConfigsRoute> _configsRoute; 
+    std::map<std::string, Route> _confRoute; 
     void setMap(std::string config);
     void setMethods();
-    void setConfigsRoute();
+    void setConfPath();
 
     public:
     Configs();
     ~Configs();
     Configs(std::string config);
-    std::string GetHostPort();
-    std::string GetHost();
-    unsigned int GetPort();
-    std::map<std::string, ConfigsRoute> GetConfigsRoute();
-    std::string GetServerName();
-    size_t GetLimitSizeBody();
-    int GetRedirectionCode();
-    std::string GetRedirectionUrl();
-    std::string GetErrorPath(std::string code) const;
-    bool isMethod(std::string method);
     bool isEmpty();
+    unsigned int GetPort();
+    int GetRedir();
+    size_t GetMaxBodySize();
+    bool isMethod(std::string method);
+    std::string GetHost();
+    std::string GetUrl();
+    std::string GetHostPort();
+    std::string GetServerName();
+    std::string GetPathErr(std::string code) const;
+    std::map<std::string, Route> GetRoute();
 };

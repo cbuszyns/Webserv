@@ -1,16 +1,16 @@
 #include "../incs/WebServer.h"
 
-ConfigsRoute::ConfigsRoute(){
+Route::Route(){
 }
 
-ConfigsRoute::ConfigsRoute(std::string config, std::string path): _path(path){
+Route::Route(std::string config, std::string path): _path(path){
 	setMap(config);
 }
 
-ConfigsRoute::~ConfigsRoute(){
+Route::~Route(){
 }
 
-void ConfigsRoute::setMap(std::string config){
+void Route::setMap(std::string config){
 	std::string::size_type start;
 	std::string::size_type end = 0;
 	std::string::size_type i;
@@ -31,15 +31,15 @@ void ConfigsRoute::setMap(std::string config){
 
 }
 
-std::string ConfigsRoute::GetPath(){
+std::string Route::GetPath(){
 	return _path;
 }
 
-std::string ConfigsRoute::GetRoot(){
+std::string Route::GetRoot(){
 	return _map["root"];
 }
 
-std::vector<std::string> ConfigsRoute::GetCGIPath(){
+std::vector<std::string> Route::GetCGIPath(){
 	std::vector<std::string> cgi;
 	int delimiter = _map["cgi_pass"].find(' ');
 	cgi.push_back(_map["cgi_pass"].substr(0, delimiter));
@@ -47,21 +47,21 @@ std::vector<std::string> ConfigsRoute::GetCGIPath(){
 	return cgi;
 }
 
-std::string ConfigsRoute::GetUploadPath(){
+std::string Route::GetUploadPath(){
 	std::string uploadPath = _map["upload_directory"];
 	if (uploadPath.empty())
 		return std::string();
 	return uploadPath;
 }
 
-bool ConfigsRoute::GetAutoIndex(){
+bool Route::GetAutoIndex(){
 	return _map["autoindex"] == "on";
 }
 
-std::string ConfigsRoute::GetMethods(){
+std::string Route::GetMethods(){
 	return _map["methods"];
 }
 
-std::string ConfigsRoute::GetIndex(){
+std::string Route::GetIndex(){
 	return _map["index"];
 }

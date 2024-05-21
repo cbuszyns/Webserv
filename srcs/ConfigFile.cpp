@@ -29,12 +29,16 @@ ConfigFile::~ConfigFile()
 {
 }
 
-void ConfigFile::setMapConfigs()
+std::vector<Configs> ConfigFile::GetConfVec()
 {
-	std::vector<Configs>::iterator it1 = _configs.begin();
-	for( ; it1 != _configs.end(); it1++)
-		_mapConfigs[(*it1).GetHostPort()].push_back(*it1);
+	return _configs;
 }
+
+std::map<std::string, std::vector<Configs> > ConfigFile::GetMapConf()
+{
+	return _mapConfigs;
+}
+
 
 std::vector<std::string> ConfigFile::splitString(std::string content)
 {
@@ -68,13 +72,9 @@ Configs ConfigFile::GetConfig(std::string hostPort, std::string serverName)
 	}
 	return defaultConfig;
 }
-
-std::map<std::string, std::vector<Configs> > ConfigFile::GetMapConfig()
+void ConfigFile::setMapConfigs()
 {
-	return _mapConfigs;
-}
-
-std::vector<Configs> ConfigFile::GetConfigs()
-{
-	return _configs;
+	std::vector<Configs>::iterator it1 = _configs.begin();
+	for( ; it1 != _configs.end(); it1++)
+		_mapConfigs[(*it1).GetHostPort()].push_back(*it1);
 }

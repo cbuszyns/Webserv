@@ -2,15 +2,15 @@
 
 #include "WebServer.h"
 
-class ConfigsRoute{
+class Route{
 	private:
 		std::string _path;
 		std::map<std::string, std::string> _map;
 		void setMap(std::string config);
 	public:
-		ConfigsRoute();
-		ConfigsRoute(std::string config, std::string path);
-		~ConfigsRoute();
+		Route();
+		Route(std::string config, std::string path);
+		~Route();
 		std::string GetPath();
 		std::string GetRoot();
 		std::vector<std::string> GetCGIPath();

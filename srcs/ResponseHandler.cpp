@@ -1,18 +1,5 @@
 # include "../incs/WebServer.h"
 
-int execAutoindex()
-{
-	pid_t pid = fork();
-	if (pid == 0)
-	{
-		std::string language = PYTHON3PATH;
-		const char *pyArgs[] = {PYTHON3PATH, AUTOINDEXPATH, NULL};
-		char *envp[] = {NULL};
-		execve(language.c_str(), const_cast< char ** >(pyArgs), envp);
-		exit(0);
-	}
-	return 0;
-}
 
 ResponseHandler::ResponseHandler(Server *server, RequestHandler *request, Configs *config)
 	: _server(server), _request(request), _config(config)
@@ -33,6 +20,93 @@ ResponseHandler::ResponseHandler(RequestHandler *request, std::pair<std::string,
 
 ResponseHandler::~ResponseHandler()
 {
+}
+
+std::string ResponseHandler::getRespCode(int code) const
+{
+	return _code.at(code);
+}
+
+std::string ResponseHandler::getDate() const
+{
+	std::string date = "date: ";
+	time_t t = std::time(NULL);
+	tm* lt = std::localtime(&t);
+	char buffer[50];
+	std::strftime(buffer, 80, "%a, %d %b %Y %X", lt);
+	date.append(std::string(buffer));
+	return date;
+}
+
+char **ResponseHandler::getEnvAsCstrArray() const {
+	char	**env = new char*[this->_env.size() + 1];
+	int	j = 0;
+	for (std::map<std::string, std::string>::const_iterator i = this->_env.begin(); i != this->_env.end(); i++) {
+		std::string	element = i->first + "=" + i->second;
+		env[j] = new char[element.size() + 1];
+		env[j] = strcpy(env[j], (const char*)element.c_str());
+		j++;
+	}
+	env[j] = NULL;
+	return env;
+}
+
+
+Route ResponseHandler::getSimilarRoute(std::string path) const
+{
+	std::map<std::string, Route> configRoute = _config->GetRoute();
+	std::map<std::string, Route>::reverse_iterator it = configRoute.rbegin();
+
+	while (it != configRoute.rend()) {
+		if (path.rfind(it->first, 0) == 0){
+			return it->second;
+		}
+		it++;
+	}
+	std::map<std::string, Route> tmp = _server->GetConfig().GetRoute();
+	if (tmp.find(std::string("/")) == tmp.end())
+	{
+		std::cerr << RED << "Error: Parsing Config file is gone wrong" << RESET << std::endl;
+		exit(1);
+	}
+	return tmp.find(std::string("/"))->second;
+}
+
+std::pair<std::string, std::string> ResponseHandler::getError() const
+{
+	return _error;
+}
+
+void ResponseHandler::setEnv() {
+	std::map<std::string, std::string>	headers = _request->GetHeaders();
+	char cwd[9999];
+	getcwd(cwd, sizeof(cwd));
+	if (headers.find("Auth-Scheme") != headers.end() && headers["Auth-Scheme"] != "")
+		this->_env["AUTH_TYPE"] = headers["Authorization"];
+
+	this->_env["REDIRECT_STATUS"] = "200";
+	this->_env["GATEWAY_INTERFACE"] = "CGI/1.1";
+	this->_env["SCRIPT_NAME"] = _path;
+	this->_env["SCRIPT_FILENAME"] = _path;
+	this->_env["REQUEST_METHOD"] = _request->GetMethod();
+	this->_env["CONTENT_LENGTH"] = to_string(_request->GetBody().length());
+	this->_env["CONTENT_TYPE"] = headers["Content-Type"];
+	this->_env["PATH_INFO"] = _path;
+	this->_env["PATH_TRANSLATED"] =_path;
+	this->_env["QUERY_STRING"] = _request->GetQueryString();
+	this->_env["REMOTEaddr"] = _config->GetHost();
+	this->_env["REMOTE_IDENT"] = headers["Authorization"];
+	this->_env["REMOTE_USER"] = headers["Authorization"];
+	this->_env["REQUEST_URI"] = _path + _request->GetQueryString();
+	this->_env["UPLOAD_PATH"] = std::string(cwd) + getSimilarRoute(_request->GetPath()).GetUploadPath();
+	if (headers.find("Hostname") != headers.end())
+		this->_env["SERVER_NAME"] = headers["Hostname"];
+	else
+		this->_env["SERVER_NAME"] = this->_env["REMOTEaddr"];
+	this->_env["SERVER_PORT"] = to_string(_config->GetPort());
+	this->_env["SERVER_PROTOCOL"] = "HTTP/1.1";
+	this->_env["SERVER_SOFTWARE"] = "Webserv/1.0";
+	this->_env["HTTP_COOKIE"] = headers["Cookie"];
 }
 
 std::string ResponseHandler::createResp(int code) const
@@ -83,19 +157,19 @@ void ResponseHandler::setCodeMap()
 void ResponseHandler::setPath()
 {
 	std::string path = _request->GetPath();
-	ConfigsRoute route = getSimilarRoute(path);
+	Route route = getSimilarRoute(path);
 
 	if (route.GetMethods().rfind(_request->GetMethod()) == std::string::npos)
-		_error = std::make_pair("405", _config->GetErrorPath("405"));
+		_error = std::make_pair("405", _config->GetPathErr("405"));
 	std::string::size_type temp = path.rfind(route.GetPath(), 0);
 	if (temp == 0) temp = route.GetPath().length();
 	if (!route.GetRoot().empty())
 		_path = route.GetRoot().append("/" + path.substr(temp, path.size() - temp));
 	else
 		_path = path;
-	ConfigsRoute newRoute = getSimilarRoute(_path);
+	Route newRoute = getSimilarRoute(_path);
 	if (newRoute.GetMethods().rfind(_request->GetMethod()) == std::string::npos)
-		_error = std::make_pair("405", _config->GetErrorPath("405"));
+		_error = std::make_pair("405", _config->GetPathErr("405"));
 	if (_path[0] == '/')
 		_path = _path.substr(1, _path.size() - 1);
 	if (_path[_path.size() - 1] == '/')
@@ -122,6 +196,34 @@ void ResponseHandler::setPath()
 			f.close();
 	}
 }
+void ResponseHandler::setContentType(std::string path, std::string type)
+{
+	Route route;
+	if (_request)
+		route = getSimilarRoute(_request->GetPath());
+	if (type != "")
+	{
+		_contentType = type;
+		return ;
+	}
+	size_t dotPos = path.rfind(".");
+	type = dotPos != std::string::npos ? path.substr(dotPos + 1, path.size() - dotPos) : "";
+	if (type == "html" || (type == "php" && route.GetCGIPath()[0] == "php")
+		|| (type == "py" && route.GetCGIPath()[0] == "py") || _request->GetMethod() == "DELETE")
+		_contentType = "text/html";
+	else if (type == "css")
+		_contentType = "text/css";
+	else if (type == "js")
+		_contentType = "text/javascript";
+	else if (type == "jpeg" || type == "jpg")
+		_contentType = "image/jpeg";
+	else if (type == "png")
+		_contentType = "image/png";
+	else if (type == "bmp")
+		_contentType = "image/bmp";
+	else
+		_contentType = "text/plain";
+}
 
 void ResponseHandler::setContent()
 {
@@ -132,7 +234,7 @@ void ResponseHandler::setContent()
 	stat(_path.c_str(), &s);
 	if (access(_path.c_str(), F_OK) == 0 && access(_path.c_str(), R_OK) != 0)
 	{
-		_error = std::make_pair("403", _config->GetErrorPath("403"));
+		_error = std::make_pair("403", _config->GetPathErr("403"));
 		return ;
 	}
 	if (file.is_open() && !(s.st_mode & S_IFDIR))
@@ -149,7 +251,7 @@ void ResponseHandler::setContent()
 		}
 		else if (_error.first.empty() && (type == ".php" || type == ".py"))
 		{
-			ConfigsRoute route = getSimilarRoute(_request->GetPath());
+			Route route = getSimilarRoute(_request->GetPath());
 			if (route.GetCGIPath()[0] == type)
 			{
 				setEnv();
@@ -181,124 +283,10 @@ void ResponseHandler::setContent()
 		}
 	}
 	else
-		_error = std::make_pair("404", _config->GetErrorPath("404"));
+		_error = std::make_pair("404", _config->GetPathErr("404"));
 	file.close();
 }
 
-void ResponseHandler::setContentType(std::string path, std::string type)
-{
-	ConfigsRoute route;
-	if (_request)
-		route = getSimilarRoute(_request->GetPath());
-	if (type != "")
-	{
-		_contentType = type;
-		return ;
-	}
-	size_t dotPos = path.rfind(".");
-	type = dotPos != std::string::npos ? path.substr(dotPos + 1, path.size() - dotPos) : "";
-	if (type == "html" || (type == "php" && route.GetCGIPath()[0] == "php")
-		|| (type == "py" && route.GetCGIPath()[0] == "py") || _request->GetMethod() == "DELETE")
-		_contentType = "text/html";
-	else if (type == "css")
-		_contentType = "text/css";
-	else if (type == "js")
-		_contentType = "text/javascript";
-	else if (type == "jpeg" || type == "jpg")
-		_contentType = "image/jpeg";
-	else if (type == "png")
-		_contentType = "image/png";
-	else if (type == "bmp")
-		_contentType = "image/bmp";
-	else
-		_contentType = "text/plain";
-}
-
-std::string ResponseHandler::getRespCode(int code) const
-{
-	return _code.at(code);
-}
-
-std::string ResponseHandler::getDate() const
-{
-	std::string date = "date: ";
-	time_t t = std::time(NULL);
-	tm* lt = std::localtime(&t);
-	char buffer[50];
-	std::strftime(buffer, 80, "%a, %d %b %Y %X", lt);
-	date.append(std::string(buffer));
-	return date;
-}
-
-ConfigsRoute ResponseHandler::getSimilarRoute(std::string path) const
-{
-	std::map<std::string, ConfigsRoute> configRoute = _config->GetConfigsRoute();
-	std::map<std::string, ConfigsRoute>::reverse_iterator it = configRoute.rbegin();
-
-	while (it != configRoute.rend()) {
-		if (path.rfind(it->first, 0) == 0){
-			return it->second;
-		}
-		it++;
-	}
-	std::map<std::string, ConfigsRoute> tmp = _server->GetConfig().GetConfigsRoute();
-	if (tmp.find(std::string("/")) == tmp.end())
-	{
-		std::cerr << RED << "Error: Parsing Config file is gone wrong" << RESET << std::endl;
-		exit(1);
-	}
-	return tmp.find(std::string("/"))->second;
-}
-
-std::pair<std::string, std::string> ResponseHandler::getError() const
-{
-	return _error;
-}
-
-void ResponseHandler::setEnv() {
-	std::map<std::string, std::string>	headers = _request->GetHeaders();
-	char cwd[9999];
-	getcwd(cwd, sizeof(cwd));
-	if (headers.find("Auth-Scheme") != headers.end() && headers["Auth-Scheme"] != "")
-		this->_env["AUTH_TYPE"] = headers["Authorization"];
-
-	this->_env["REDIRECT_STATUS"] = "200";
-	this->_env["GATEWAY_INTERFACE"] = "CGI/1.1";
-	this->_env["SCRIPT_NAME"] = _path;
-	this->_env["SCRIPT_FILENAME"] = _path;
-	this->_env["REQUEST_METHOD"] = _request->GetMethod();
-	this->_env["CONTENT_LENGTH"] = to_string(_request->GetBody().length());
-	this->_env["CONTENT_TYPE"] = headers["Content-Type"];
-	this->_env["PATH_INFO"] = _path;
-	this->_env["PATH_TRANSLATED"] =_path;
-	this->_env["QUERY_STRING"] = _request->GetQueryString();
-	this->_env["REMOTEaddr"] = _config->GetHost();
-	this->_env["REMOTE_IDENT"] = headers["Authorization"];
-	this->_env["REMOTE_USER"] = headers["Authorization"];
-	this->_env["REQUEST_URI"] = _path + _request->GetQueryString();
-	this->_env["UPLOAD_PATH"] = std::string(cwd) + getSimilarRoute(_request->GetPath()).GetUploadPath();
-	if (headers.find("Hostname") != headers.end())
-		this->_env["SERVER_NAME"] = headers["Hostname"];
-	else
-		this->_env["SERVER_NAME"] = this->_env["REMOTEaddr"];
-	this->_env["SERVER_PORT"] = to_string(_config->GetPort());
-	this->_env["SERVER_PROTOCOL"] = "HTTP/1.1";
-	this->_env["SERVER_SOFTWARE"] = "Webserv/1.0";
-	this->_env["HTTP_COOKIE"] = headers["Cookie"];
-}
-
-char **ResponseHandler::getEnvAsCstrArray() const {
-	char	**env = new char*[this->_env.size() + 1];
-	int	j = 0;
-	for (std::map<std::string, std::string>::const_iterator i = this->_env.begin(); i != this->_env.end(); i++) {
-		std::string	element = i->first + "=" + i->second;
-		env[j] = new char[element.size() + 1];
-		env[j] = strcpy(env[j], (const char*)element.c_str());
-		j++;
-	}
-	env[j] = NULL;
-	return env;
-}
 
 std::string ResponseHandler::executeCgi(const std::vector<std::string>& cgiPar) {
 	pid_t		pid;
@@ -376,4 +364,20 @@ std::string ResponseHandler::executeCgi(const std::vector<std::string>& cgiPar) 
 		exit(0);
 
 	return (newBody);
+}
+
+
+
+int execAutoindex()
+{
+	pid_t pid = fork();
+	if (pid == 0)
+	{
+		std::string language = PYTHON3PATH;
+		const char *pyArgs[] = {PYTHON3PATH, AUTOINDEXPATH, NULL};
+		char *envp[] = {NULL};
+		execve(language.c_str(), const_cast< char ** >(pyArgs), envp);
+		exit(0);
+	}
+	return 0;
 }

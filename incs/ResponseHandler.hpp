@@ -29,7 +29,7 @@ class ResponseHandler
 		void setEnv();
 		char **getEnvAsCstrArray() const;
 		std::string executeCgi(const std::vector<std::string>& cgiPas);
-		ConfigsRoute getSimilarRoute(std::string path) const;
+		Route getSimilarRoute(std::string path) const;
 
 	public:
 		ResponseHandler(Server *server, RequestHandler *request, Configs *config);

@@ -18,6 +18,6 @@ class ConfigFile
 		ConfigFile(const std::string& file);
 		~ConfigFile();
 		Configs GetConfig(std::string host, std::string servername);
-		std::map<std::string, std::vector<Configs> > GetMapConfig();
-		std::vector<Configs> GetConfigs();
+		std::map<std::string, std::vector<Configs> > GetMapConf();
+		std::vector<Configs> GetConfVec();
 };
