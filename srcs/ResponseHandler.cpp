@@ -84,9 +84,6 @@ void ResponseHandler::setPath()
 {
 	std::string path = _request->GetPath();
 	ConfigsRoute route = getSimilarRoute(path);
-	std::cout << "Route set path " << path <<  std::endl;
-	std::cout << "Route SET" << route.GetPath() << " ROOT SET " << route.GetRoot() << std::endl;
-
 
 	if (route.GetMethods().rfind(_request->GetMethod()) == std::string::npos)
 		_error = std::make_pair("405", _config->GetErrorPath("405"));
@@ -97,8 +94,6 @@ void ResponseHandler::setPath()
 	else
 		_path = path;
 	ConfigsRoute newRoute = getSimilarRoute(_path);
-	std::cout << _path << "madonnina "<<std::endl;	
-	std::cout << "newRoute " << newRoute.GetPath() << " newROOT " << newRoute.GetRoot() << std::endl;
 	if (newRoute.GetMethods().rfind(_request->GetMethod()) == std::string::npos)
 		_error = std::make_pair("405", _config->GetErrorPath("405"));
 	if (_path[0] == '/')
@@ -126,53 +121,7 @@ void ResponseHandler::setPath()
 		else
 			f.close();
 	}
-	// std::cout << _path << std::endl;
 }
-// void ResponseHandler::setPath()
-// {
-// 	std::string path = _request->GetPath();
-// 	ConfigsRoute route = getSimilarRoute(path);
-// 	std::cout << "Route set path " << path <<  std::endl;
-// 	if (route.GetMethods().rfind(_request->GetMethod()) == std::string::npos)
-// 		_error = std::make_pair("405", _config->GetErrorPath("405"));
-// 	std::string::size_type temp = path.rfind(route.GetPath(), 0);
-// 	if (temp == 0)
-// 		temp = route.GetPath().length();
-// 	if (!route.GetRoot().empty())
-// 		_path = route.GetRoot().append("/" + path.substr(temp, path.size() - temp));
-// 	else
-// 		_path = path;
-// 	ConfigsRoute newRoute = getSimilarRoute(path);
-// 	std::cout << _path << "madonnina"<<std::endl;	
-// 	std::cout << "newRoute " << newRoute.GetPath() << " newROOT " << newRoute.GetRoot() << std::endl;
-// 	if (newRoute.GetMethods().rfind(_request->GetMethod()) == std::string::npos)
-// 		_error = std::make_pair("405", _config->GetErrorPath("405"));
-// 	if (_path[0] == '/')
-// 		_path = _path.substr(1, _path.size() - 1);
-// 	if (_path[_path.size() - 1] == '/')
-// 		_path = _path.substr(0, _path.size() - 1);
-// 	if (!newRoute.GetIndex().empty() && _path == newRoute.GetPath().substr(1, _path.size()))
-// 		_path.append(newRoute.GetIndex());
-// 	if (((newRoute.GetRoot().size() == 0 && newRoute.GetPath().size() > 0
-// 		&& _path == newRoute.GetPath().substr(1, _path.size()))
-// 		|| (route.GetRoot().size() > 0
-// 		&& _path == route.GetRoot().substr(1, _path.size())))
-// 		&& route.GetAutoIndex())
-// 	{
-// 		std::ifstream f(_path.c_str());
-// 		struct stat s;
-// 		stat(_path.c_str(), &s);
-// 		if (f.fail() || s.st_mode & S_IFDIR)
-// 		{
-// 			execAutoindex();
-// 			if (_path.size() == 0)
-// 				_path = ".";
-// 			_path.append("/.index.html");
-// 		}
-// 		else
-// 			f.close();
-// 	}
-// }
 
 void ResponseHandler::setContent()
 {
@@ -201,7 +150,6 @@ void ResponseHandler::setContent()
 		else if (_error.first.empty() && (type == ".php" || type == ".py"))
 		{
 			ConfigsRoute route = getSimilarRoute(_request->GetPath());
-			std::cout << "rererereRoute " << _request->GetPath() << std::endl;
 			if (route.GetCGIPath()[0] == type)
 			{
 				setEnv();
@@ -242,7 +190,6 @@ void ResponseHandler::setContentType(std::string path, std::string type)
 	ConfigsRoute route;
 	if (_request)
 		route = getSimilarRoute(_request->GetPath());
-	std::cout << "Route in setcontype " << route.GetPath() << " ROOT setincontype " << route.GetRoot() << std::endl;
 	if (type != "")
 	{
 		_contentType = type;
@@ -290,7 +237,6 @@ ConfigsRoute ResponseHandler::getSimilarRoute(std::string path) const
 
 	while (it != configRoute.rend()) {
 		if (path.rfind(it->first, 0) == 0){
-			std::cout << "Path: " << path << " it->first " << it->first << std::endl;
 			return it->second;
 		}
 		it++;

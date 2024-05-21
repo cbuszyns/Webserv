@@ -118,7 +118,6 @@ int main(int argc, char *argv[])
 					ResponseHandler resHeader = ResponseHandler(servers[i], &reqHeader, &config);
 					try
 					{
-						std::cout << "ResHeader " << resHeader.getPath() << std::endl;
 						if (reqHeader.GetMethod() == "POST" && reqHeader.GetBody().length() > config.GetLimitSizeBody())
 						{
 							resHeader = ResponseHandler(NULL, std::make_pair("413", config.GetErrorPath("413")));
@@ -167,7 +166,6 @@ int main(int argc, char *argv[])
 				{
 					for(size_t k = 0; resp.size() != 0; k++)
 					{
-						// std::cout << "Resp dio cane: " << resp <<std::endl;
 						respChunck = resp.substr(0, 35000);
 						dataSent = send(servers[i]->_clients[j].first, servers[i]->_clients[j].second.c_str(), respChunck.size(), 0);
 						if (dataSent <= 0)
